@@ -1,0 +1,14 @@
+{
+  "name": "aws-docker-users-api",
+  "version": "1.0.0",
+  "description": "Node.js Express PostgreSQL CRUD API for users",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}
