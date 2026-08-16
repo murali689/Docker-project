@@ -17,8 +17,11 @@ pipeline {
         stage('Check Docker') {
             steps {
                 sh '''
+                    echo "Checking Docker..."
                     docker --version
-                    docker compose version
+
+                    echo "Checking Docker Compose..."
+                    docker-compose --version
                 '''
             }
         }
@@ -29,6 +32,27 @@ pipeline {
                     if [ ! -f .env ]; then
                         cp .env.example .env
                     fi
+
+                    echo ".env file created successfully"
+                    ls -la .env
+                '''
+            }
+        }
+
+        stage('Verify Project Files') {
+            steps {
+                sh '''
+                    echo "Project files:"
+                    ls -la
+
+                    echo "Checking docker-compose.yml..."
+                    test -f docker-compose.yml
+
+                    echo "Checking application directory..."
+                    test -d app
+
+                    echo "Checking nginx directory..."
+                    test -d nginx
                 '''
             }
         }
@@ -36,7 +60,8 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    docker compose build --no-cache
+                    echo "Building Docker images..."
+                    docker-compose build --no-cache
                 '''
             }
         }
@@ -44,7 +69,8 @@ pipeline {
         stage('Stop Existing Application') {
             steps {
                 sh '''
-                    docker compose down || true
+                    echo "Stopping existing application..."
+                    docker-compose down || true
                 '''
             }
         }
@@ -52,7 +78,8 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 sh '''
-                    docker compose up -d
+                    echo "Starting application..."
+                    docker-compose up -d
                 '''
             }
         }
@@ -60,8 +87,16 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
+                    echo "Waiting for containers..."
                     sleep 15
-                    docker compose ps
+
+                    echo "Container status:"
+                    docker-compose ps
+
+                    echo "Docker containers:"
+                    docker ps
+
+                    echo "Testing application health..."
                     curl -f http://localhost/health
                 '''
             }
@@ -69,22 +104,28 @@ pipeline {
     }
 
     post {
+
         success {
-            echo '======================================'
-            echo 'Application deployed successfully!'
-            echo '======================================'
+            echo '''
+            ==========================================
+            APPLICATION DEPLOYED SUCCESSFULLY!
+            ==========================================
+            '''
         }
 
         failure {
-            echo '======================================'
-            echo 'Deployment failed!'
-            echo 'Check Jenkins Console Output.'
-            echo '======================================'
+            echo '''
+            ==========================================
+            DEPLOYMENT FAILED!
+            Check the Console Output.
+            ==========================================
+            '''
         }
 
         always {
+            echo "Final container status:"
             sh '''
-                docker compose ps || true
+                docker-compose ps || true
             '''
         }
     }
